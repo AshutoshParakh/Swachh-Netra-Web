@@ -119,9 +119,10 @@ process.on('SIGINT', () => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Swachh Netra Admin Portal API running on port ${PORT}`);
   console.log(`📚 Health check: http://localhost:${PORT}/health`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔐 Admin Portal: http://localhost:3000`);
+  console.log(`📱 Network Access: http://172.27.180.104:${PORT}`);
 });

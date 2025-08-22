@@ -2,26 +2,39 @@
 const admin = require('firebase-admin');
 require('dotenv').config();
 
-// PRODUCTION MODE: Enable Firebase with real data
-console.log('🔥 PRODUCTION MODE: Connecting to Firebase with real data');
+// PRODUCTION MODE: Enable Firebase with real data from your Swachh-Netra project
+console.log('🔥 PRODUCTION MODE: Connecting to Firebase with REAL DATA');
 console.log('💡 Using project: swachh-netra-3e12e');
+console.log('💡 Fetching actual data from your Firebase database');
 
-// Initialize Firebase Admin SDK
+// Initialize Firebase Admin SDK with your project
 let app;
 
 try {
-  // Initialize with your actual Firebase project
+  // Initialize with your actual Firebase project using client SDK approach
   const firebaseConfig = {
     projectId: 'swachh-netra-3e12e',
-    // Use application default credentials or service account
+    // For admin SDK, we'll use the client config approach
+    credential: admin.credential.applicationDefault(),
   };
 
   app = admin.initializeApp(firebaseConfig);
   console.log('✅ Firebase Admin initialized successfully with project: swachh-netra-3e12e');
 } catch (error) {
   console.error('❌ Error initializing Firebase Admin:', error);
-  console.log('💡 Falling back to demo mode');
-  app = null;
+  console.log('💡 Trying alternative initialization method...');
+
+  try {
+    // Alternative: Initialize without explicit credentials (uses environment)
+    app = admin.initializeApp({
+      projectId: 'swachh-netra-3e12e'
+    });
+    console.log('✅ Firebase Admin initialized with alternative method');
+  } catch (altError) {
+    console.error('❌ Alternative initialization also failed:', altError);
+    console.log('💡 Falling back to demo mode');
+    app = null;
+  }
 }
 
 // Export Firebase services
@@ -32,7 +45,7 @@ try {
     db = admin.firestore();
     auth = admin.auth();
     storage = admin.storage();
-    console.log('✅ Firebase services initialized successfully');
+    console.log('✅ Firebase services initialized - ready to fetch REAL DATA');
   } else {
     db = null;
     auth = null;

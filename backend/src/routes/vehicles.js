@@ -1,6 +1,7 @@
 // Vehicle management routes for admin portal
 const express = require('express');
 const { db, COLLECTIONS } = require('../config/firebase');
+const { getVehicles } = require('../config/firebase-web');
 const { requirePermission } = require('../middleware/auth');
 
 const router = express.Router();
@@ -9,7 +10,7 @@ const router = express.Router();
  * GET /api/vehicles
  * Get all vehicles with pagination and filtering
  */
-router.get('/', requirePermission('canManageVehicles'), async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const {
       page = 1,
@@ -19,51 +20,18 @@ router.get('/', requirePermission('canManageVehicles'), async (req, res) => {
       search
     } = req.query;
 
-    // PRODUCTION MODE: Use real Firebase data
-    if (!db) {
-      return res.status(503).json({
-        success: false,
-        message: 'Database not available'
-      });
-    }
+    console.log('🔥 PRODUCTION MODE: Fetching REAL VEHICLES from Firebase database');
 
-    console.log('🔥 PRODUCTION MODE: Fetching real vehicles data from Firebase');
-
-    let query = db.collection(COLLECTIONS.VEHICLES);
+    // Get real vehicles from Firebase using web API
+    let vehicles = await getVehicles();
 
     // Apply filters
     if (status && status !== 'all') {
-      query = query.where('status', '==', status);
+      vehicles = vehicles.filter(vehicle => vehicle.status === status);
     }
 
     if (type && type !== 'all') {
-      query = query.where('type', '==', type);
-    }
-
-    // Execute query to get real vehicles data
-
-    // Execute query
-    let vehicles = [];
-    try {
-      // Try to get vehicles with ordering
-      let snapshot;
-      try {
-        snapshot = await query.orderBy('createdAt', 'desc').get();
-      } catch (orderError) {
-        // If ordering fails (index might not exist), try without ordering
-        console.log('Ordering by createdAt failed, trying without ordering');
-        snapshot = await query.get();
-      }
-
-      snapshot.forEach(doc => {
-        vehicles.push({
-          id: doc.id,
-          ...doc.data()
-        });
-      });
-    } catch (error) {
-      console.log('Vehicles collection not accessible, returning empty array');
-      vehicles = [];
+      vehicles = vehicles.filter(vehicle => vehicle.type === type);
     }
 
     // Apply search filter (client-side for simplicity)

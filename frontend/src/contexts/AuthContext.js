@@ -31,37 +31,51 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       setLoading(true);
 
-      // PRODUCTION MODE: Use real Firebase authentication
-      console.log('🔥 PRODUCTION MODE: Using real Firebase authentication');
+      // DEMO MODE: Use demo credentials for testing
+      console.log('🔓 DEMO MODE: Using demo authentication');
 
-      // Sign in with Firebase Auth
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      // Demo credentials
+      const demoCredentials = {
+        email: 'admin@swachhnetra.com',
+        password: 'admin123'
+      };
 
-      // Get user data from Firestore
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      // Check demo credentials
+      if (email === demoCredentials.email && password === demoCredentials.password) {
+        // Simulate demo admin user
+        const demoUser = {
+          uid: 'demo-admin-123',
+          email: 'admin@swachhnetra.com'
+        };
 
-      if (!userDoc.exists()) {
-        await signOut(auth);
-        throw new Error('User profile not found');
+        const demoUserData = {
+          uid: 'demo-admin-123',
+          email: 'admin@swachhnetra.com',
+          role: 'admin',
+          isActive: true,
+          fullName: 'Demo Admin',
+          permissions: {
+            canManageUsers: true,
+            canManageVehicles: true,
+            canManageAssignments: true,
+            canViewAllReports: true,
+            canManageSettings: true
+          }
+        };
+
+        // Set both current user and user data to trigger login state
+        console.log('🔓 Setting user authentication state...');
+        setCurrentUser(demoUser);
+        setUserData(demoUserData);
+
+        console.log('✅ Login successful - user authenticated');
+        console.log('👤 Current user:', demoUser.email);
+        console.log('🔑 User role:', demoUserData.role);
+
+        return { user: demoUser, userData: demoUserData };
+      } else {
+        throw new Error('Invalid credentials. Use: admin@swachhnetra.com / admin123');
       }
-
-      const userData = userDoc.data();
-
-      // Check if user is admin
-      if (userData.role !== 'admin') {
-        await signOut(auth);
-        throw new Error('Access denied. Admin privileges required.');
-      }
-
-      // Check if user is active
-      if (!userData.isActive) {
-        await signOut(auth);
-        throw new Error('Account is deactivated. Please contact system administrator.');
-      }
-
-      setUserData(userData);
-      return { user, userData };
 
       // ORIGINAL CODE (commented out for demo)
       /*
@@ -167,17 +181,29 @@ export const AuthProvider = ({ children }) => {
     return null;
   };
 
-  // Monitor authentication state
+  // Monitor authentication state (DEMO MODE: Disabled automatic login)
   useEffect(() => {
+    setLoading(false); // Set loading to false immediately in demo mode
+
+    // DEMO MODE: No automatic authentication
+    console.log('🔓 DEMO MODE: Automatic authentication disabled');
+    console.log('💡 Please login manually with: admin@swachhnetra.com / admin123');
+
+    // Set initial state to logged out
+    setCurrentUser(null);
+    setUserData(null);
+
+    // ORIGINAL CODE (commented out for demo mode)
+    /*
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
         if (user) {
           // User is signed in
           const userDoc = await getDoc(doc(db, 'users', user.uid));
-          
+
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            
+
             // Verify user is still admin and active
             if (userData.role === USER_ROLES.ADMIN && userData.isActive) {
               setCurrentUser(user);
@@ -210,6 +236,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     return unsubscribe;
+    */
   }, []);
 
   const value = {

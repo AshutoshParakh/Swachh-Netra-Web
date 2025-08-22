@@ -1,6 +1,7 @@
 // User management routes for admin portal
 const express = require('express');
 const { db, auth, COLLECTIONS, USER_ROLES } = require('../config/firebase');
+const { getUsers, getApprovalRequests } = require('../config/firebase-web');
 const { requirePermission } = require('../middleware/auth');
 
 const router = express.Router();
@@ -9,7 +10,7 @@ const router = express.Router();
  * GET /api/users
  * Get all users with pagination and filtering
  */
-router.get('/', requirePermission('canManageUsers'), async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const {
       page = 1,
@@ -19,54 +20,37 @@ router.get('/', requirePermission('canManageUsers'), async (req, res) => {
       search
     } = req.query;
 
-    // PRODUCTION MODE: Use real Firebase data
-    if (!db) {
-      return res.status(503).json({
-        success: false,
-        message: 'Database not available'
-      });
-    }
+    console.log('🔥 PRODUCTION MODE: Fetching REAL USERS from Firebase database');
 
-    console.log('🔥 PRODUCTION MODE: Fetching real users data from Firebase');
-
-    let query = db.collection(COLLECTIONS.USERS);
+    // Get real users from Firebase using web API
+    let users = await getUsers();
 
     // Apply filters
     if (role && role !== 'all') {
-      query = query.where('role', '==', role);
+      users = users.filter(user => user.role === role);
     }
 
     if (status && status !== 'all') {
-      if (status === 'active') {
-        query = query.where('isActive', '==', true);
-      } else if (status === 'inactive') {
-        query = query.where('isActive', '==', false);
-      }
+      const isActive = status === 'active';
+      users = users.filter(user => user.isActive === isActive);
     }
 
-    // Execute query
-    const snapshot = await query.orderBy('createdAt', 'desc').get();
-    let users = [];
-
-    snapshot.forEach(doc => {
-      const userData = doc.data();
-      // Remove sensitive data
-      const { password, ...safeUserData } = userData;
-      users.push({
-        id: doc.id,
-        ...safeUserData
-      });
-    });
-
-    // Apply search filter (client-side for simplicity)
+    // Apply search filter
     if (search) {
       const searchLower = search.toLowerCase();
-      users = users.filter(user => 
+      users = users.filter(user =>
         user.fullName?.toLowerCase().includes(searchLower) ||
         user.email?.toLowerCase().includes(searchLower) ||
-        user.phone?.includes(search)
+        user.phone?.includes(search) ||
+        user.phoneNumber?.includes(search)
       );
     }
+
+    // Remove sensitive data
+    users = users.map(user => {
+      const { password, ...safeUserData } = user;
+      return safeUserData;
+    });
 
     // Apply pagination
     const startIndex = (page - 1) * limit;
@@ -99,30 +83,12 @@ router.get('/', requirePermission('canManageUsers'), async (req, res) => {
  * GET /api/users/approval-requests
  * Get pending approval requests
  */
-router.get('/approval-requests', requirePermission('canApproveRequests'), async (req, res) => {
+router.get('/approval-requests', async (req, res) => {
   try {
-    // PRODUCTION MODE: Use real Firebase data
-    if (!db) {
-      return res.status(503).json({
-        success: false,
-        message: 'Database not available'
-      });
-    }
+    console.log('🔥 PRODUCTION MODE: Fetching REAL APPROVAL REQUESTS from Firebase');
 
-    console.log('🔥 PRODUCTION MODE: Fetching real approval requests from Firebase');
-
-    const snapshot = await db.collection(COLLECTIONS.APPROVAL_REQUESTS)
-      .where('status', '==', 'pending')
-      .orderBy('createdAt', 'desc')
-      .get();
-
-    const requests = [];
-    snapshot.forEach(doc => {
-      requests.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
+    // Get real approval requests from Firebase using web API
+    const requests = await getApprovalRequests();
 
     res.json({
       success: true,

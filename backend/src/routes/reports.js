@@ -18,7 +18,7 @@ router.get('/dashboard', async (req, res) => {
       recentActivities: []
     };
 
-    // PRODUCTION MODE: Use real Firebase data
+    // Check if Firebase is available
     if (!db) {
       return res.status(503).json({
         success: false,
@@ -26,7 +26,7 @@ router.get('/dashboard', async (req, res) => {
       });
     }
 
-    console.log('🔥 PRODUCTION MODE: Fetching real dashboard data from Firebase');
+    console.log('🔥 PRODUCTION MODE: Fetching REAL DASHBOARD DATA from Firebase');
 
     try {
       // Get user statistics

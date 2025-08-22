@@ -45,7 +45,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       setError('Please fill in all fields');
       return;
@@ -55,11 +55,19 @@ const Login = () => {
     setError(null);
 
     try {
-      await signIn(email, password);
-      navigate(from, { replace: true });
+      console.log('🔓 Attempting login with:', email);
+      const result = await signIn(email, password);
+      console.log('✅ Login successful, result:', result);
+
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        console.log('🔄 Navigating to dashboard...');
+        navigate(from, { replace: true });
+      }, 100);
+
     } catch (error) {
-      console.error('Login error:', error);
-      // Error is handled by AuthContext
+      console.error('❌ Login error:', error);
+      setError(error.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
