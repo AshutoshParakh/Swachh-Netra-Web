@@ -1,0 +1,38 @@
+{
+  "name": "swachh-netra-webportal-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Swachh Netra Admin Web Portal",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "dotenv": "^16.3.1",
+    "firebase-admin": "^11.11.1",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "multer": "^1.4.5-lts.1",
+    "compression": "^1.7.4",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  },
+  "keywords": [
+    "admin",
+    "api",
+    "firebase",
+    "express",
+    "waste-management"
+  ],
+  "author": "Swachh Netra Team",
+  "license": "MIT"
+}
